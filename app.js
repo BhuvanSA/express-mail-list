@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", function(req, res) {
+app.get("/", function (req, res) {
   res.sendFile(path.join(__dirname + "/signup.html"));
 });
 
@@ -19,7 +19,7 @@ mailchimp.setConfig({
   server: process.env.MAILCHIMP_SERVER, // Something Like this "us21"
 });
 
-app.post("/", function(req, res) {
+app.post("/", function (req, res) {
   const audienceId = process.env.MAILCHIMP_AUDIENCE_ID; // Something like this "351212152f"
   const subscribingUser = {
     firstName: req.body.fName,
@@ -32,7 +32,6 @@ app.post("/", function(req, res) {
     subscribingUser.lastName,
     subscribingUser.email,
   );
-  console.log(__dirname);
   async function run() {
     const response = await mailchimp.lists.addListMember(audienceId, {
       email_address: subscribingUser.email,
@@ -42,15 +41,16 @@ app.post("/", function(req, res) {
         LNAME: subscribingUser.lastName,
       },
     });
-
-    console.log(
-      `Sucessfully added contact as an audience member. The contact's id is ${response.id}.`,
-    );
-    res.sendFile(__dirname + "/success.html");
   }
-  run();
+  try {
+    run();
+    res.sendFile(__dirname + "/success.html");
+  } catch (err) {
+    console.log(err);
+    res.sendFile(__dirname + "/failure.html");
+  }
 });
 
-app.listen(3000, function() {
-  console.log("Server is running on port 3000");
+app.listen(process.env.PORT || 3000, function () {
+  console.log("Server is running");
 });
